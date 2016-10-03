@@ -47,11 +47,11 @@ void transpose(std::vector<std::vector<float> > &X, std::vector<std::vector<floa
     using namespace std;
 
     // Transpose X
-    for(int i = 0; i < X[0].size(); i++){
+    for(uint_fast16_t i = 0; i < X[0].size(); i++){
 
         vector<float> temp;
 
-        for(int j = 0; j < X.size(); j++)
+        for(uint_fast16_t j = 0; j < X.size(); j++)
         {
             temp.push_back(X[j][i]);
         }
@@ -69,20 +69,20 @@ void A_dot_b(std::vector<std::vector<float> > &A, std::vector<float> &b, std::ve
     // Verify dimensions
     if(A[0].size() != b.size())
     {
-        printf("**SIZE MISMATCH (A[0].size(), b.size()): %d, %d**\n", A[0].size(), b.size()); 
+        cout << "**SIZE MISMATCH (A[0].size(), b.size()): " << A[0].size() << "," << b.size() << endl;
         exit(0);
     }
 
     // For each datapoint
-    for(int i = 0; i < A.size(); i++)
+    for(uint_fast16_t i = 0; i < A.size(); i++)
     {
         // Grab all of the current-dimension's X values
         vector<float> x_i = A[i];
-      
+
         float pp = 0;
 
         // Dot product (inner-product) of the current column and row
-        for(int j = 0; j < b.size(); j++)
+        for(uint_fast16_t j = 0; j < b.size(); j++)
         {
             pp += (x_i[j] * b[j]);
 
@@ -94,7 +94,7 @@ void A_dot_b(std::vector<std::vector<float> > &A, std::vector<float> &b, std::ve
 int main(int argc, char *argv[]) {
     using namespace std;
 
-    int num_epochs = 1000;
+    uint_fast16_t num_epochs = 1000;
 
     if(argc == 2)
         num_epochs = stoi(argv[1]);
@@ -116,10 +116,10 @@ int main(int argc, char *argv[]) {
     transpose(X, X_t);
 
     /* Number of samples */
-    int m = X.size();
+    uint_fast16_t m = X.size();
 
     /* Number of features */
-    int n = X[0].size();
+    uint_fast16_t n = X[0].size();
 
     cout << "Number of samples (m): " << m << endl;
     cout << "Number of features (n-1): " << n - 1 << endl;
@@ -137,13 +137,13 @@ int main(int argc, char *argv[]) {
     vector<float> error(m);
     vector<float> gradient(n);
 
-    for(int epoch = 0; epoch < num_epochs; epoch++)
+    for(uint_fast16_t epoch = 0; epoch < num_epochs; epoch++)
     {
 
         A_dot_b(X, theta, X_theta);
 
         /* Subtract y from theta_transpose_x */
-        for (int i = 0; i < X.size(); i++) {
+        for (uint_fast16_t i = 0; i < X.size(); i++) {
             error[i] = X_theta[i] - y[i];
         }
 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
         A_dot_b(X_t, error, gradient);
 
         // Update the theta
-        for(int i = 0; i < n; i++)
+        for(uint_fast16_t i = 0; i < n; i++)
         {
             theta[i] = theta[i] - (alpha) * gradient[i];
             cout << "Gradient: " << gradient[i] << endl;
@@ -169,6 +169,6 @@ int main(int argc, char *argv[]) {
             cout << k << " ";
         }
         cout << ")\n--" << endl;
-        
+
     }
 }
