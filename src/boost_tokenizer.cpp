@@ -1,170 +1,174 @@
-/*
-    This version of the tokenizer parses floats.
-    The first <N-1> columns are parsed into X
-    The last column is parsed into Y
+    /*
+        This version of the tokenizer parses floats.
+        The first <N-1> columns are parsed into X
+        The last column is parsed into Y
 
-*/
+    */
 
-#include <iostream> // cout, endl
-#include <fstream>  // fstream
-#include <sstream>  // sstream
-#include <vector>
-#include <string>
-#include <algorithm> // copy
-#include <iterator>  // ostream_operator
+    #include <iostream> // cout, endl
+    #include <fstream>  // fstream
+    #include <sstream>  // sstream
+    #include <vector>
+    #include <string>
+    #include <algorithm> // copy
+    #include <iterator>  // ostream_operator
 
-int main() {
+void readcsv(std::ifstream& data_stream, std::vector< std::vector<float> > &X, std::vector<float> &y)
+{
     using namespace std;
 
-    ifstream in_data;
-    in_data.open("../data/ex1data1.csv");
-
     string line;
-
-    float alpha = 0.01;
-
     vector<float> vec;
-    vector<vector<float>> X;
-    vector<float> y;
 
-    // Read line by line
-    while (getline(in_data, line)) {
+    while(getline(data_stream, line))
+    {
         string column;
         stringstream line_stream(line);
 
         vec.push_back(1.0);
-        // Delimit the columns on ','
-        while (getline(line_stream, column, ',')) {
+
+        while(getline(line_stream, column, ','))
+        {
             vec.push_back(stof(column));
         }
 
-        // Use the last column for y
         y.push_back(vec.back());
-
-        // Push the rest into X
         vec.pop_back();
-
-        // Push vec into X
         X.push_back(vec);
-
         vec.clear();
     }
+}
 
-    cout << "----- X -----" << endl;
-    ;
-    for (auto i : X) {
-        for (auto j : i) {
-            cout << j << " ";
+/*
+    Very inefficient way to transpose X to X_t
+*/
+void transpose(std::vector<std::vector<float> > &X, std::vector<std::vector<float> > &X_t)
+{
+    using namespace std;
+
+    // Transpose X
+    for(int i = 0; i < X[0].size(); i++){
+
+        vector<float> temp;
+
+        for(int j = 0; j < X.size(); j++)
+        {
+            temp.push_back(X[j][i]);
         }
-        cout << endl;
+        X_t.push_back(temp);
+    }
+}
+
+/*
+    Function to find the inner product of matrix A[m][n] and vector b[n]
+*/
+void A_dot_b(std::vector<std::vector<float> > &A, std::vector<float> &b, std::vector<float> &result)
+{
+    using namespace std;
+
+    // Verify dimensions
+    if(A[0].size() != b.size())
+    {
+        printf("**SIZE MISMATCH (A[0].size(), b.size()): %d, %d**\n", A[0].size(), b.size()); 
+        exit(0);
     }
 
-    cout << "----- y -----" << endl;
-    for (auto i : y) {
-        cout << i << endl;
+    // For each datapoint
+    for(int i = 0; i < A.size(); i++)
+    {
+        // Grab all of the current-dimension's X values
+        vector<float> x_i = A[i];
+      
+        float pp = 0;
+
+        // Dot product (inner-product) of the current column and row
+        for(int j = 0; j < b.size(); j++)
+        {
+            pp += (x_i[j] * b[j]);
+
+        }
+        result[i] = pp;
     }
+}
+
+int main(int argc, char *argv[]) {
+    using namespace std;
+
+    int num_epochs = 1000;
+
+    if(argc == 2)
+        num_epochs = stoi(argv[1]);
+
+    cout << "Num epochs: " << num_epochs << endl;
+
+    ifstream in_data;
+    in_data.open("../data/ex1data1.csv");
+
+    float alpha = 0.0001;
+
+    vector<vector<float> > X;
+    vector<float> y;
+
+    readcsv(in_data, X, y);
+
+    // Let's transpose X
+    vector<vector<float> > X_t;
+    transpose(X, X_t);
 
     /* Number of samples */
-    uint_fast16_t m = X.size();
+    int m = X.size();
+
     /* Number of features */
-    uint_fast16_t n = X[0].size();
+    int n = X[0].size();
 
     cout << "Number of samples (m): " << m << endl;
-    cout << "Number of features (n): " << n - 1 << endl;
+    cout << "Number of features (n-1): " << n - 1 << endl;
+    cout << "Dimension of X: " << X.size() << ", " << X[0].size() << endl;
+    cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size() << endl;
+    cout << "------------------------" << endl;
 
-    /* Initialize theta */
+    /* Initialize theta to ones (Ideally we want this to be 'guesses') */
     vector<float> theta(n);
     for (auto &t : theta) {
-        t = 1;
+        t = 1.0;
     }
 
-    cout << "theta" << endl;
-    for (auto &k : theta) {
-        cout << k << endl;
-    }
+    vector<float> X_theta(m);
+    vector<float> error(m);
+    vector<float> gradient(n);
 
+    for(int epoch = 0; epoch < num_epochs; epoch++)
     {
-        /* Calculate h_theta(x) */
-        vector<float> theta_transpose_x(m);
-        for (uint_fast16_t i = 0; i < m; i++) {
-            vector<float> &x_i = X[i];
-            float pp = 0;
-            for (uint_fast16_t j = 0; j < n; j++) {
-                pp = pp + (x_i[j] * theta[j]);
-            }
-            theta_transpose_x[i] = pp;
-        }
 
-        cout << "theta_transpose_x" << endl;
-        for (auto ttx : theta_transpose_x) {
-            cout << ttx << endl;
-        }
+        A_dot_b(X, theta, X_theta);
 
         /* Subtract y from theta_transpose_x */
-        vector<float> theta_transpose_x_minus_y(m);
-        for (uint_fast16_t i = 0; i < m; i++) {
-            theta_transpose_x_minus_y[i] = theta_transpose_x[i] - y[i];
+        for (int i = 0; i < X.size(); i++) {
+            error[i] = X_theta[i] - y[i];
         }
 
-        cout << "theta_transpose_x_minus_y" << endl;
-        for (auto htxy : theta_transpose_x_minus_y) {
-            cout << htxy << endl;
+        // Calculate MSE
+        long MSE = 0.0;
+        for (auto &i : error)
+            MSE += (i * i);
+        MSE /= error.size();
+
+        /* Calculate the gradient vector */
+        A_dot_b(X_t, error, gradient);
+
+        // Update the theta
+        for(int i = 0; i < n; i++)
+        {
+            theta[i] = theta[i] - (alpha) * gradient[i];
+            cout << "Gradient: " << gradient[i] << endl;
         }
 
-        float foo = 0;
-        for (auto &i : theta_transpose_x_minus_y) {
-            foo = foo + (i * i);
+        cout << "MSE: " << MSE << endl;
+        cout << "THETA: (";
+        for (auto k : theta) {
+            cout << k << " ";
         }
-        foo = foo / m;
-        cout << "MSE: " << foo << endl;
+        cout << ")\n--" << endl;
+        
     }
-
-    /* Calculate new theta */
-    vector<float> new_theta(n);
-    for (uint_fast16_t i = 0; i < n; i++) {
-        float pp = 0;
-        for (uint_fast16_t j = 0; j < m; j++) {
-            pp = pp + (theta_transpose_x_minus_y[j] * X[j][i]);
-        }
-        new_theta[i] = pp;
-    }
-
-    float bar = alpha / m;
-    for (auto &i : new_theta) {
-        i = bar * i;
-    }
-
-    cout << "new_theta" << endl;
-    for (auto &k : new_theta) {
-        cout << k << endl;
-    }
-
-    // Now calculate theta_transpose_x - y to calculate error
-    vector<float> new_theta_transpose_x(m);
-    for (uint_fast16_t i = 0; i < m; i++) {
-        vector<float> &x_i = X[i];
-        float pp = 0;
-        for (uint_fast16_t j = 0; j < n; j++) {
-            pp = pp + (x_i[j] * new_theta[j]);
-        }
-        new_theta_transpose_x[i] = pp;
-    }
-
-    cout << "new_theta_transpose_x" << endl;
-    for (auto ttx : new_theta_transpose_x) {
-        cout << ttx << endl;
-    }
-
-    /* Subtract y from h_theta(x) */
-    vector<float> new_h_theta_x_minus_y(m);
-    for (uint_fast16_t i = 0; i < m; i++) {
-        new_h_theta_x_minus_y[i] = new_theta_transpose_x[i] - y[i];
-    }
-
-    foo = 0;
-    for (auto &i : new_h_theta_x_minus_y) {
-        foo = foo + (i * i);
-    }
-    foo = foo / m;
-    cout << "MSE: " << foo << endl;
 }
