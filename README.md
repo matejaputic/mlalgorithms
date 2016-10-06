@@ -2,11 +2,11 @@ Implement simple machine learning algorithms, benchmark with Google
 
 ### ML Algorithms
 ```
-|-----------------------------+-----|
++-----------------------------+-----+
 | Algorithm / Data Structure  | C++ |
-|-----------------------------+-----+
++-----------------------------+-----+
 | Linear Regression           |     |
-|-----------------------------+-----+
++-----------------------------+-----+
 ```
 
 Notes:
