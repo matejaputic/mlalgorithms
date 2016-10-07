@@ -110,12 +110,13 @@ int main(int argc, char *argv[]) {
     if (argc == 2)
         num_epochs = stoi(argv[1]);
 
-    cout << "Num epochs: " << num_epochs << endl;
+    if (DEBUG)
+        cout << "Num epochs: " << num_epochs << endl;
 
     ifstream in_data;
-    in_data.open("../data/ex1data2.csv");
+    in_data.open("../data/ex1data1.csv");
 
-    float alpha = 0.0000000001;
+    float alpha = 0.0001;
 
     vector<vector<float>> X;
     vector<float> y;
@@ -132,12 +133,14 @@ int main(int argc, char *argv[]) {
     /* Number of features */
     uint_fast16_t n = X[0].size();
 
-    cout << "Number of samples (m): " << m << endl;
-    cout << "Number of features (n-1): " << n - 1 << endl;
-    cout << "Dimension of X: " << X.size() << ", " << X[0].size() << endl;
-    cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
-         << endl;
-    cout << "------------------------" << endl;
+    if (DEBUG) {
+        cout << "Number of samples (m): " << m << endl;
+        cout << "Number of features (n-1): " << n - 1 << endl;
+        cout << "Dimension of X: " << X.size() << ", " << X[0].size() << endl;
+        cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
+             << endl;
+        cout << "------------------------" << endl;
+    }
 
     /* Initialize theta to ones (Ideally we want this to be 'guesses') */
     vector<float> theta(n);
@@ -151,9 +154,11 @@ int main(int argc, char *argv[]) {
     /* Gradient function (*/
     vector<float> gradient(n);
 
+    float MSE = 0.0;
     for (uint_fast16_t epoch = 0; epoch < num_epochs; epoch++) {
 
-        cout << "Iter: " << epoch << endl;
+        if (DEBUG)
+            cout << "Iter: " << epoch << endl;
 
         /* Calculate hypothesis */
         A_dot_b(X, theta, X_theta);
@@ -174,7 +179,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* Calculate MSE */
-        float MSE = 0.0;
+        MSE = 0.0;
         for (auto &i : error)
             MSE += (i * i);
         MSE /= error.size();
@@ -198,11 +203,19 @@ int main(int argc, char *argv[]) {
                 cout << "    " << x << endl;
         }
 
-        cout << "MSE: " << MSE << endl;
-        cout << "THETA: (";
-        for (auto k : theta) {
-            cout << k << " ";
+        if (DEBUG) {
+            cout << "MSE: " << MSE << endl;
+            cout << "THETA: (";
+            for (auto k : theta) {
+                cout << k << " ";
+            }
+            cout << ")\n--" << endl;
         }
-        cout << ")\n--" << endl;
     }
+    cout << "MSE: " << MSE << endl;
+    cout << "THETA: (";
+    for (auto k : theta) {
+        cout << k << " ";
+    }
+    cout << ")\n--" << endl;
 }
