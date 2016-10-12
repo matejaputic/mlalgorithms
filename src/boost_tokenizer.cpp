@@ -15,7 +15,7 @@
 #include <cstdbool>  // true and false
 #include <Eigen/Dense>
 
-#define DEBUG false
+#define DEBUG true
 
 using namespace std;
 using namespace Eigen;
@@ -25,7 +25,7 @@ void getCSVNumRowsCols(ifstream &data_stream, uint_fast16_t &rows,
     string line;
     getline(data_stream, line);
     cols = count(line.begin(), line.end(), ',') + 1;
-    rows = 0;
+    rows = 1;
     while (getline(data_stream, line)) {
         rows++;
     }
@@ -172,7 +172,7 @@ void A_dot_b(vector<vector<float>> &A, vector<float> &b,
 
 int main(int argc, char *argv[]) {
 
-    uint_fast16_t num_epochs = 1000;
+    uint_fast16_t num_epochs = 10;
 
     if (argc == 2)
         num_epochs = stoi(argv[1]);
@@ -181,9 +181,9 @@ int main(int argc, char *argv[]) {
         cout << "Num epochs: " << num_epochs << endl;
 
     ifstream in_data;
-    in_data.open("../data/ex1data1.csv");
+    in_data.open("../data/ex1data2.csv");
 
-    // float alpha = 0.0001;
+    float alpha = 0.000000003;
 
     uint_fast16_t rows, cols;
 
@@ -200,101 +200,70 @@ int main(int argc, char *argv[]) {
     in_data.close();
 
     // Transpose X
-    MatrixXf X_t = X.transpose();
+    MatrixXf X_t(cols, rows);
+    X_t = X.transpose();
 
-    while (true)
-        break;
+    /* Number of samples */
+    uint_fast16_t m = rows;
 
-    // /* Number of samples */
-    // uint_fast16_t m = X.size();
+    /* Number of features */
+    uint_fast16_t n = cols;
 
-    // /* Number of features */
-    // uint_fast16_t n = X[0].size();
+    if (DEBUG) {
+        cout << "Number of samples (m): " << m << endl;
+        cout << "Number of features (n-1): " << n - 1 << endl;
+        // cout << "Dimension of X: " << X.size() << ", " << X[0].size() <<
+        // endl;
+        // cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
+        //      << endl;
+        cout << "------------------------" << endl;
+    }
 
-    // if (DEBUG) {
-    //     cout << "Number of samples (m): " << m << endl;
-    //     cout << "Number of features (n-1): " << n - 1 << endl;
-    //     cout << "Dimension of X: " << X.size() << ", " << X[0].size() <<
-    //     endl;
-    //     cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
-    //          << endl;
-    //     cout << "------------------------" << endl;
-    // }
+    // Initialize theta to ones (Ideally we want this to be 'guesses')
+    VectorXf theta(n);
+    /* Set guesses to all 1s */
+    theta.setOnes();
 
-    // /* Initialize theta to ones (Ideally we want this to be 'guesses') */
-    // vector<float> theta(n);
-    // for (auto &t : theta) {
-    //     t = 1.0;
-    // }
+    /* Hypothesis */
+    VectorXf X_theta(m);
+    /* The error function (J(Theta)) */
+    VectorXf error(m);
+    /* Gradient function */
+    VectorXf gradient(n);
 
-    // vector<float> X_theta(m);
-    // /* The error function (J(Theta)) */
-    // vector<float> error(m);
-    // /* Gradient function (*/
-    // vector<float> gradient(n);
+    for (uint_fast16_t epoch = 0; epoch < num_epochs; epoch++) {
+        if (DEBUG)
+            cout << "**** Iter: " << epoch << " ****" << endl;
 
-    // float MSE = 0.0;
-    // for (uint_fast16_t epoch = 0; epoch < num_epochs; epoch++) {
+        /* Calculate hypothesis */
+        X_theta = X * theta;
 
-    //     if (DEBUG)
-    //         cout << "Iter: " << epoch << endl;
+        if (DEBUG)
+            cout << "X_theta: " << endl << X_theta << endl;
 
-    //     /* Calculate hypothesis */
-    //     A_dot_b(X, theta, X_theta);
-    //     if (DEBUG) {
-    //         cout << "main: X_theta[]:" << endl;
-    //         for (auto &x : X_theta)
-    //             cout << "    " << x << endl;
-    //     }
+        /* Find distance between hypothesis and each x */
+        error = X_theta - y;
 
-    //     /* Find distance between hypothesis and each x */
-    //     for (uint_fast16_t i = 0; i < X.size(); i++) {
-    //         error[i] = X_theta[i] - y[i];
-    //     }
-    //     if (DEBUG) {
-    //         cout << "main: error[]:" << endl;
-    //         for (auto &x : error)
-    //             cout << "    " << x << endl;
-    //     }
+        if (DEBUG)
+            cout << "MSE: " << error.squaredNorm() / m << endl;
 
-    //     /* Calculate MSE */
-    //     MSE = 0.0;
-    //     for (auto &i : error)
-    //         MSE += (i * i);
-    //     MSE /= error.size();
+        if (DEBUG)
+            cout << "error: " << endl << error << endl;
 
-    //     /* Calculate the gradient vector
-    //      * In this case it's just the sum of the errors in each direction */
-    //     A_dot_b(X_t, error, gradient);
-    //     if (DEBUG) {
-    //         cout << "main: gradient[]:" << endl;
-    //         for (auto &x : gradient)
-    //             cout << "    " << x << endl;
-    //     }
+        /* Calculate the gradient vector
+         * In this case it's just the sum of the errors in each direction */
+        gradient = X_t * error;
 
-    //     /* Update the theta */
-    //     for (uint_fast16_t i = 0; i < n; i++) {
-    //         theta[i] = theta[i] - (alpha)*gradient[i];
-    //     }
-    //     if (DEBUG) {
-    //         cout << "main: theta[]:" << endl;
-    //         for (auto &x : theta)
-    //             cout << "    " << x << endl;
-    //     }
+        if (DEBUG)
+            cout << "gradient: " << endl << gradient << endl;
 
-    //     if (DEBUG) {
-    //         cout << "MSE: " << MSE << endl;
-    //         cout << "THETA: (";
-    //         for (auto k : theta) {
-    //             cout << k << " ";
-    //         }
-    //         cout << ")\n--" << endl;
-    //     }
-    // }
-    // cout << "MSE: " << MSE << endl;
-    // cout << "THETA: (";
-    // for (auto k : theta) {
-    //     cout << k << " ";
-    // }
-    // cout << ")\n--" << endl;
+        /* Update the theta */
+        theta = theta - (alpha * gradient);
+
+        if (DEBUG)
+            cout << "theta: " << endl << theta << endl;
+    }
+
+    cout << "MSE: " << error.squaredNorm() / m << endl;
+    cout << "THETA: " << theta << endl;
 }
