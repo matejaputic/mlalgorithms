@@ -10,35 +10,102 @@
 #include <sstream>  // sstream
 #include <vector>
 #include <string>
-#include <algorithm> // copy
+#include <algorithm> // copy, count
 #include <iterator>  // ostream_operator
-#include <cstdbool>
+#include <cstdbool>  // true and false
+#include <Eigen/Dense>
 
 #define DEBUG false
 
 using namespace std;
+using namespace Eigen;
 
-void readcsv(ifstream &data_stream, vector<vector<float>> &X,
-             vector<float> &y) {
-
+void getCSVNumRowsCols(ifstream &data_stream, uint_fast16_t &rows,
+                       uint_fast16_t &cols) {
     string line;
-    vector<float> vec;
-
+    getline(data_stream, line);
+    cols = count(line.begin(), line.end(), ',') + 1;
+    rows = 0;
     while (getline(data_stream, line)) {
-        string column;
-        stringstream line_stream(line);
-
-        vec.push_back(1.0);
-
-        while (getline(line_stream, column, ',')) {
-            vec.push_back(stof(column));
-        }
-
-        y.push_back(vec.back());
-        vec.pop_back();
-        X.push_back(vec);
-        vec.clear();
+        rows++;
     }
+
+    // Clear the failbit if set, and rewind to beginning
+    data_stream.clear();
+    data_stream.seekg(0);
+}
+
+/**
+ * Assumes row-major indexing
+ * Assumes X is size (rows, cols-1)
+ * Assumes y is size (rows, 1)
+ * Assumes data is of type float
+ * Assumes there are at least two columns and one row in the ifstream
+ * Assumes delimiter is ','
+ * Assigns first 1.0 to first column of X
+ * @param data_stream [description]
+ * @param rows        [description]
+ * @param cols        [description]
+ * @param X           [description]
+ * @param y           [description]
+ */
+void readcsv(ifstream &data_stream, uint_fast16_t rows, uint_fast16_t cols,
+             MatrixXf &X, VectorXf &y) {
+    string line;
+    string column;
+
+    uint_fast16_t row_idx = 0;
+    uint_fast16_t X_col_idx = 0;
+
+    // Copy the rest of the rows
+    while (row_idx < rows) {
+        /* Preamble */
+        X_col_idx = 0;
+        X(row_idx, X_col_idx++) = 1.0;
+        // X_col_idx++;
+
+        getline(data_stream, line);
+        string::size_type pos = 0;
+        X(row_idx, X_col_idx++) = stof(line.substr(pos));
+        // X_col_idx++;
+        while (X_col_idx <= cols) {
+            pos = line.find(',', pos);
+            if (pos == string::npos) {
+                // Reached the end of the row
+                break;
+            }
+            pos++;
+            if (X_col_idx == cols) {
+                // Reached the end of X, add to y
+                y(row_idx) = stof(line.substr(pos));
+            } else {
+                X(row_idx, X_col_idx++) = stof(line.substr(pos));
+            }
+        }
+        row_idx++;
+    }
+
+    // while (getline(line_stream, column, ',')) {
+    //     X(row_idx, col_idx++) = stof(column);
+    // }
+
+    // Continue copying rest of rows
+    // while (basic_istream::getline(data_stream, line)) {
+    //     string column;
+    //     stringstream line_stream(line);
+
+    //     vec.push_back(1.0);
+
+    //     while (basic_istream::getline(line_stream, column, ',')) {
+    //         X(row, col++) = stof(column);
+    //         vec.push_back(stof(column));
+    //     }
+
+    //     y.push_back(vec.back());
+    //     vec.pop_back();
+    //     X.push_back(vec);
+    //     vec.clear();
+    // }
 }
 
 /*
@@ -116,106 +183,118 @@ int main(int argc, char *argv[]) {
     ifstream in_data;
     in_data.open("../data/ex1data1.csv");
 
-    float alpha = 0.0001;
+    // float alpha = 0.0001;
 
-    vector<vector<float>> X;
-    vector<float> y;
+    uint_fast16_t rows, cols;
 
-    readcsv(in_data, X, y);
+    getCSVNumRowsCols(in_data, rows, cols);
 
-    // Let's transpose X
-    vector<vector<float>> X_t;
-    transpose(X, X_t);
+    MatrixXf X(rows, cols);
+    VectorXf y(rows);
 
-    /* Number of samples */
-    uint_fast16_t m = X.size();
+    if (DEBUG)
+        cout << "Rows, cols: (" << rows << ", " << cols << ")" << endl;
 
-    /* Number of features */
-    uint_fast16_t n = X[0].size();
+    readcsv(in_data, rows, cols, X, y);
 
-    if (DEBUG) {
-        cout << "Number of samples (m): " << m << endl;
-        cout << "Number of features (n-1): " << n - 1 << endl;
-        cout << "Dimension of X: " << X.size() << ", " << X[0].size() << endl;
-        cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
-             << endl;
-        cout << "------------------------" << endl;
-    }
+    in_data.close();
 
-    /* Initialize theta to ones (Ideally we want this to be 'guesses') */
-    vector<float> theta(n);
-    for (auto &t : theta) {
-        t = 1.0;
-    }
+    // Transpose X
+    MatrixXf X_t = X.transpose();
 
-    vector<float> X_theta(m);
-    /* The error function (J(Theta)) */
-    vector<float> error(m);
-    /* Gradient function (*/
-    vector<float> gradient(n);
+    while (true)
+        break;
 
-    float MSE = 0.0;
-    for (uint_fast16_t epoch = 0; epoch < num_epochs; epoch++) {
+    // /* Number of samples */
+    // uint_fast16_t m = X.size();
 
-        if (DEBUG)
-            cout << "Iter: " << epoch << endl;
+    // /* Number of features */
+    // uint_fast16_t n = X[0].size();
 
-        /* Calculate hypothesis */
-        A_dot_b(X, theta, X_theta);
-        if (DEBUG) {
-            cout << "main: X_theta[]:" << endl;
-            for (auto &x : X_theta)
-                cout << "    " << x << endl;
-        }
+    // if (DEBUG) {
+    //     cout << "Number of samples (m): " << m << endl;
+    //     cout << "Number of features (n-1): " << n - 1 << endl;
+    //     cout << "Dimension of X: " << X.size() << ", " << X[0].size() <<
+    //     endl;
+    //     cout << "Dimensions of X_t: " << X_t.size() << ", " << X_t[0].size()
+    //          << endl;
+    //     cout << "------------------------" << endl;
+    // }
 
-        /* Find distance between hypothesis and each x */
-        for (uint_fast16_t i = 0; i < X.size(); i++) {
-            error[i] = X_theta[i] - y[i];
-        }
-        if (DEBUG) {
-            cout << "main: error[]:" << endl;
-            for (auto &x : error)
-                cout << "    " << x << endl;
-        }
+    // /* Initialize theta to ones (Ideally we want this to be 'guesses') */
+    // vector<float> theta(n);
+    // for (auto &t : theta) {
+    //     t = 1.0;
+    // }
 
-        /* Calculate MSE */
-        MSE = 0.0;
-        for (auto &i : error)
-            MSE += (i * i);
-        MSE /= error.size();
+    // vector<float> X_theta(m);
+    // /* The error function (J(Theta)) */
+    // vector<float> error(m);
+    // /* Gradient function (*/
+    // vector<float> gradient(n);
 
-        /* Calculate the gradient vector
-         * In this case it's just the sum of the errors in each direction */
-        A_dot_b(X_t, error, gradient);
-        if (DEBUG) {
-            cout << "main: gradient[]:" << endl;
-            for (auto &x : gradient)
-                cout << "    " << x << endl;
-        }
+    // float MSE = 0.0;
+    // for (uint_fast16_t epoch = 0; epoch < num_epochs; epoch++) {
 
-        /* Update the theta */
-        for (uint_fast16_t i = 0; i < n; i++) {
-            theta[i] = theta[i] - (alpha)*gradient[i];
-        }
-        if (DEBUG) {
-            cout << "main: theta[]:" << endl;
-            for (auto &x : theta)
-                cout << "    " << x << endl;
-        }
+    //     if (DEBUG)
+    //         cout << "Iter: " << epoch << endl;
 
-        if (DEBUG) {
-            cout << "MSE: " << MSE << endl;
-            cout << "THETA: (";
-            for (auto k : theta) {
-                cout << k << " ";
-            }
-            cout << ")\n--" << endl;
-        }
-    }
-    cout << "MSE: " << MSE << endl;
-    cout << "THETA: (";
-    for (auto k : theta) {
-        cout << k << " ";
-    }
-    cout << ")\n--" << endl;
+    //     /* Calculate hypothesis */
+    //     A_dot_b(X, theta, X_theta);
+    //     if (DEBUG) {
+    //         cout << "main: X_theta[]:" << endl;
+    //         for (auto &x : X_theta)
+    //             cout << "    " << x << endl;
+    //     }
+
+    //     /* Find distance between hypothesis and each x */
+    //     for (uint_fast16_t i = 0; i < X.size(); i++) {
+    //         error[i] = X_theta[i] - y[i];
+    //     }
+    //     if (DEBUG) {
+    //         cout << "main: error[]:" << endl;
+    //         for (auto &x : error)
+    //             cout << "    " << x << endl;
+    //     }
+
+    //     /* Calculate MSE */
+    //     MSE = 0.0;
+    //     for (auto &i : error)
+    //         MSE += (i * i);
+    //     MSE /= error.size();
+
+    //     /* Calculate the gradient vector
+    //      * In this case it's just the sum of the errors in each direction */
+    //     A_dot_b(X_t, error, gradient);
+    //     if (DEBUG) {
+    //         cout << "main: gradient[]:" << endl;
+    //         for (auto &x : gradient)
+    //             cout << "    " << x << endl;
+    //     }
+
+    //     /* Update the theta */
+    //     for (uint_fast16_t i = 0; i < n; i++) {
+    //         theta[i] = theta[i] - (alpha)*gradient[i];
+    //     }
+    //     if (DEBUG) {
+    //         cout << "main: theta[]:" << endl;
+    //         for (auto &x : theta)
+    //             cout << "    " << x << endl;
+    //     }
+
+    //     if (DEBUG) {
+    //         cout << "MSE: " << MSE << endl;
+    //         cout << "THETA: (";
+    //         for (auto k : theta) {
+    //             cout << k << " ";
+    //         }
+    //         cout << ")\n--" << endl;
+    //     }
+    // }
+    // cout << "MSE: " << MSE << endl;
+    // cout << "THETA: (";
+    // for (auto k : theta) {
+    //     cout << k << " ";
+    // }
+    // cout << ")\n--" << endl;
 }
