@@ -27,6 +27,7 @@ void usage(char * argv) {
   printf("USAGE: %s [OPTIONS] <input filename> \n", argv);
   printf("  -e               The number of iterations (epochs) to be computed\n");
   printf("  -a               The step size for each update\n");
+  printf("  -d               Enable debugging\n");
 
   printf("\n MISC:\n");
   printf("  -h               Print this help and exit\n");
