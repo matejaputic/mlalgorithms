@@ -3,13 +3,23 @@ project (mlalgorithms)
 
 find_package(Boost)
 
-SET(CMAKE_CXX_COMPILER "/usr/bin/g++-5")
+# For apple, let's use clang++
+if(APPLE)
+	SET(CMAKE_CXX_COMPILER "clang++")
+	MESSAGE( STATUS "You're an apple, we're using clang++!")
+
+# For everyone else, let's use g++-5
+else()
+	SET(CMAKE_CXX_COMPILER "/usr/bin/g++-5")
+	MESSAGE( STATUS "You're not an apple, so we're going to use g++-5")
+endif()
+
 # SET(CMAKE_CXX_FLAGS "-O3 -std=c++14 -fno-exceptions -fno-rtti -Wall -Werror -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS "-O3 -ggdb -std=c++14 -fno-rtti -Wall -Werror -fno-omit-frame-pointer -march=native -fopenmp")
 
 include_directories(include)
-
 include_directories(${Boost_INCLUDE_DIRS}})
-add_executable(boost_tokenizer src/boost_tokenizer.cpp)
-target_link_libraries(boost_tokenizer ${Boost_LIBRARIES})
 
+# Install to bin directory
+set(EXECUTABLE_OUTPUT_PATH "../bin")
+add_executable(boost_tokenizer src/boost_tokenizer.cpp)
