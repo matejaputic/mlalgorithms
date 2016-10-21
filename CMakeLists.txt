@@ -5,7 +5,7 @@ find_package(Boost)
 
 SET(CMAKE_CXX_COMPILER "/usr/bin/g++-5")
 # SET(CMAKE_CXX_FLAGS "-O3 -std=c++14 -fno-exceptions -fno-rtti -Wall -Werror -fno-omit-frame-pointer")
-SET(CMAKE_CXX_FLAGS "-O3 -ggdb -std=c++14 -fno-rtti -Wall -Werror -fno-omit-frame-pointer")
+SET(CMAKE_CXX_FLAGS "-O3 -ggdb -std=c++14 -fno-rtti -Wall -Werror -fno-omit-frame-pointer -march=native -fopenmp")
 
 include_directories(include)
 
