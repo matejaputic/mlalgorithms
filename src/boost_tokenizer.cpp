@@ -128,7 +128,7 @@ void readcsv(ifstream &data_stream, uint_fast16_t rows, uint_fast16_t cols,
 Very inefficient way to transpose X to X_t
 
 */
-void transpose(vector<vector<float>> &X, vector<vector<float>> &X_t) {
+void transpose(vector<vector<float> > &X, vector<vector<float> > &X_t) {
 
     // Transpose X
     for (uint_fast16_t i = 0; i < X[0].size(); i++) {
@@ -154,7 +154,7 @@ Function to find the inner product of matrix A[m][n] and vector b[n]
 * @param b      A vector of floats
 * @param result [description]
 */
-void A_dot_b(vector<vector<float>> &A, vector<float> &b,
+void A_dot_b(vector<vector<float> > &A, vector<float> &b,
              vector<float> &result) {
 
     // Verify dimensions
@@ -177,6 +177,16 @@ void A_dot_b(vector<vector<float>> &A, vector<float> &b,
         }
         result[i] = pp;
     }
+}
+
+// Calculate theta using the normal equation
+VectorXf normalEquation(MatrixXf &X, VectorXf &y)
+{
+    VectorXf theta(X.cols());
+    
+    theta = (X.transpose() * X).ldlt().solve(X.transpose() * y);
+    
+    return theta;
 }
 
 int main(int argc, char *argv[]) {
@@ -246,7 +256,10 @@ int main(int argc, char *argv[]) {
     readcsv(in_data, rows, cols, X, y);
 
     in_data.close();
-
+    
+    cout << "Normal Equation Results: " << endl;
+    cout << normalEquation(X, y) << endl;
+    
     /* Number of samples */
     uint_fast16_t m = rows;
 
