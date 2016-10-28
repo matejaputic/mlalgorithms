@@ -247,33 +247,18 @@ int main(int argc, char *argv[]) {
 
     in_data.close();
 
-    RowVectorXf X_mean = X.colwise().mean();
-    cout << "X_mean rows: " << X_mean.rows() << " cols: " << X_mean.cols() << endl;
-    MatrixXf X_foo = X.rowwise() - X_mean;
-    MatrixXf X_var = X_foo.colwise().squaredNorm() / X_foo.rows();
-    cout << "X_var rows: " << X_var.rows() << " cols: " << X_var.cols() << endl;
-
-    if (DEBUG) {
-        cout << "X_mean" << X_mean << endl;
-        cout << "X_var" << X_var << endl;
-    }
-
-    MatrixXf X_bar = X.rowwise() - X_mean;
-    cout << "X_bar rows: " << X_bar.rows() << " cols: " << X_bar.cols() << endl;
-    MatrixXf X_norm = X_var.inverse() * X_bar.rowwise();
-
-    // cout << X_norm << endl;
-    exit(0);
-
-    // Transpose X
-    MatrixXf X_t(cols, rows);
-    X_t = X.transpose();
-
     /* Number of samples */
     uint_fast16_t m = rows;
 
     /* Number of features */
     uint_fast16_t n = cols;
+
+    /* Normalize features */
+    X.rightCols(n-1).colwise().normalize();
+
+    // Transpose X
+    MatrixXf X_t(cols, rows);
+    X_t = X.transpose();
 
     if (DEBUG) {
         cout << "Number of samples (m): " << m << endl;

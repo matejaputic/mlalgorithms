@@ -21,5 +21,5 @@ include_directories(include)
 include_directories(${Boost_INCLUDE_DIRS}})
 
 # Install to bin directory
-set(EXECUTABLE_OUTPUT_PATH "../bin")
+# set(EXECUTABLE_OUTPUT_PATH "../bin")
 add_executable(boost_tokenizer src/boost_tokenizer.cpp)
